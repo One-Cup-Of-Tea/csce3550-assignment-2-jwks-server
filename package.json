@@ -1,0 +1,17 @@
+{
+  "name": "basic-jwks-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Educational JWKS server that issues RS256 JWTs.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test",
+    "coverage": "node --test --experimental-test-coverage",
+    "lint": "node --check index.js && node --check src/key-store.js && node --check src/jwt.js && node --check src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
