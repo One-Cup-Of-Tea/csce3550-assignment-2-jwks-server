@@ -13,5 +13,11 @@
   "engines": {
     "node": ">=20"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.10.1"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.10.1": true
+  }
 }
