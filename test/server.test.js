@@ -51,6 +51,31 @@ test('POST /auth returns a token from the active key', async () => {
   });
 });
 
+test('POST /auth accepts the gradebot Basic-auth and JSON request shape', async () => {
+  const activeKey = makeKey('active');
+  const keyStore = {
+    getSigningKey: ({ expired }) => {
+      assert.equal(expired, false);
+      return activeKey;
+    },
+    getPublicKeys: () => []
+  };
+
+  await withServer({ keyStore, jwtIssuer: (key) => `token-for-${key.kid}` }, async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/auth`, {
+      method: 'POST',
+      headers: {
+        authorization: `Basic ${Buffer.from('userABC:password123').toString('base64')}`,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({ username: 'userABC', password: 'password123' })
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { token: 'token-for-active' });
+  });
+});
+
 test('POST /auth?expired returns a token signed by the expired key', async () => {
   const activeKey = makeKey('active');
   const expiredKey = makeKey('expired');
@@ -83,5 +108,21 @@ test('unsupported routes and methods return JSON 404 responses', async () => {
     assert.deepEqual(await getAuth.json(), { error: 'Not found' });
     assert.equal(unknown.status, 404);
     assert.deepEqual(await unknown.json(), { error: 'Not found' });
+  });
+});
+
+test('database errors return a JSON 500 response', async () => {
+  const keyStore = {
+    getPublicKeys: () => {
+      throw new Error('database unavailable');
+    },
+    getSigningKey: () => makeKey('unused')
+  };
+
+  await withServer({ keyStore }, async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/.well-known/jwks.json`);
+
+    assert.equal(response.status, 500);
+    assert.deepEqual(await response.json(), { error: 'Internal server error' });
   });
 });

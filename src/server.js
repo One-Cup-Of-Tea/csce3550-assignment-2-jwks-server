@@ -14,51 +14,56 @@ function sendJson(response, statusCode, body) {
 }
 
 /**
- * Builds the HTTP server.
- * A custom keyStore can still be provided by the tests.
+ * Builds the HTTP server. A custom key store can be supplied for tests.
+ * Database failures are reported as JSON instead of terminating the process.
  */
 function createJwksServer({
   keyStore = new DatabaseKeyStore(),
   jwtIssuer = issueJwt
 } = {}) {
   return http.createServer((request, response) => {
-    const requestUrl = new URL(
-      request.url,
-      `http://${request.headers.host || 'localhost'}`
-    );
+    try {
+      const requestUrl = new URL(
+        request.url,
+        `http://${request.headers.host || 'localhost'}`
+      );
 
-    if (
-      request.method === 'GET' &&
-      requestUrl.pathname === '/.well-known/jwks.json'
-    ) {
-      sendJson(response, 200, {
-        keys: keyStore.getPublicKeys()
+      if (
+        request.method === 'GET' &&
+        requestUrl.pathname === '/.well-known/jwks.json'
+      ) {
+        sendJson(response, 200, {
+          keys: keyStore.getPublicKeys()
+        });
+
+        return;
+      }
+
+      if (
+        request.method === 'POST' &&
+        requestUrl.pathname === '/auth'
+      ) {
+        const expired =
+          requestUrl.searchParams.has('expired');
+
+        const key = keyStore.getSigningKey({
+          expired
+        });
+
+        sendJson(response, 200, {
+          token: jwtIssuer(key)
+        });
+
+        return;
+      }
+
+      sendJson(response, 404, {
+        error: 'Not found'
       });
-
-      return;
+    } catch (error) {
+      console.error('Request handling failed:', error.message);
+      sendJson(response, 500, { error: 'Internal server error' });
     }
-
-    if (
-      request.method === 'POST' &&
-      requestUrl.pathname === '/auth'
-    ) {
-      const expired =
-        requestUrl.searchParams.has('expired');
-
-      const key = keyStore.getSigningKey({
-        expired
-      });
-
-      sendJson(response, 200, {
-        token: jwtIssuer(key)
-      });
-
-      return;
-    }
-
-    sendJson(response, 404, {
-      error: 'Not found'
-    });
   });
 }
 

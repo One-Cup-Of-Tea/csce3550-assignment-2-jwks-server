@@ -68,6 +68,18 @@ test('DatabaseKeyStore returns null for a missing key', () => {
   }
 });
 
+test('DatabaseKeyStore parameterizes key-id lookups', () => {
+  const { store, folder } = createTestStore();
+
+  try {
+    const key = store.getKeyById('1 OR 1 = 1');
+
+    assert.equal(key, null);
+  } finally {
+    cleanUp(store, folder);
+  }
+});
+
 test('DatabaseKeyStore keeps keys in the database', () => {
   const { store, folder, dbPath, now } = createTestStore();
 
