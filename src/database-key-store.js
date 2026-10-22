@@ -78,6 +78,10 @@ class DatabaseKeyStore {
     return this.getKeyById(result.lastInsertRowid);
   }
 
+  /**
+   * Ensures the database has both an active key and an expired key.
+   * This preserves the two authentication paths after a restart.
+   */
   ensureRequiredKeys() {
     const now = this.currentTimeSeconds();
 
@@ -128,6 +132,12 @@ class DatabaseKeyStore {
     return this.rowToSigningKey(row);
   }
 
+  /**
+   * Deserializes one SQLite key row into the crypto representation used to sign.
+   *
+   * @param {{ kid: number, key: Buffer, exp: number }} row SQLite key row.
+   * @returns {{ kid: string, expiresAt: number, privateKey: import('node:crypto').KeyObject }}
+   */
   rowToSigningKey(row) {
     return {
       kid: String(row.kid),

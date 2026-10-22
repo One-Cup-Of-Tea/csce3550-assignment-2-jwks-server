@@ -4,6 +4,13 @@ const http = require('node:http');
 const { DatabaseKeyStore } = require('./database-key-store');
 const { issueJwt } = require('./jwt');
 
+/**
+ * Sends a no-store JSON HTTP response.
+ *
+ * @param {import('node:http').ServerResponse} response HTTP response object.
+ * @param {number} statusCode HTTP status code.
+ * @param {object} body JSON response body.
+ */
 function sendJson(response, statusCode, body) {
   response.writeHead(statusCode, {
     'content-type': 'application/json; charset=utf-8',
@@ -16,6 +23,10 @@ function sendJson(response, statusCode, body) {
 /**
  * Builds the HTTP server. A custom key store can be supplied for tests.
  * Database failures are reported as JSON instead of terminating the process.
+ *
+ * @param {{ keyStore?: object, jwtIssuer?: (key: object) => string }} options
+ * Dependency overrides used by tests.
+ * @returns {import('node:http').Server} Configured JWKS HTTP server.
  */
 function createJwksServer({
   keyStore = new DatabaseKeyStore(),

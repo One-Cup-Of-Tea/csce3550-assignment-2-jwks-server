@@ -2,11 +2,24 @@
 
 const { sign } = require('node:crypto');
 
+/**
+ * Encodes a value as an unpadded base64url string for a compact JWT.
+ *
+ * @param {string|Buffer} value Value to encode.
+ * @returns {string} base64url-encoded value.
+ */
 function base64UrlEncode(value) {
   return Buffer.from(value).toString('base64url');
 }
 
-/** Creates a compact, RS256-signed JWT using the selected key. */
+/**
+ * Creates a compact RS256-signed JWT using the selected database key.
+ *
+ * @param {{ kid: string, expiresAt: number, privateKey: import('node:crypto').KeyObject }} key
+ * Signing-key record selected from the key store.
+ * @param {{ now?: () => number }} options Clock override for deterministic tests.
+ * @returns {string} Compact JWT.
+ */
 function issueJwt(key, { now = Date.now } = {}) {
   const issuedAt = Math.floor(now() / 1000);
   const header = {

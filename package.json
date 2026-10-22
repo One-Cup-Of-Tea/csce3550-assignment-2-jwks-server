@@ -8,7 +8,7 @@
     "start": "node index.js",
     "test": "node --test",
     "coverage": "node --test --experimental-test-coverage",
-    "lint": "node --check index.js && node --check src/key-store.js && node --check src/database-key-store.js && node --check src/jwt.js && node --check src/server.js"
+    "lint": "eslint ."
   },
   "engines": {
     "node": ">=20"
@@ -19,5 +19,8 @@
   },
   "allowScripts": {
     "better-sqlite3@12.10.1": true
+  },
+  "devDependencies": {
+    "eslint": "^10.13.0"
   }
 }
